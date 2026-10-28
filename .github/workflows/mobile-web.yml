@@ -2,12 +2,10 @@ name: Optimize mobile Web build
 on:
   push:
     branches: [main]
-    paths: ['Tools/optimize_web.py', '.github/workflows/mobile-web.yml']
+    paths: ['Tools/optimize_web.py', 'Tools/tests/mobile_web.cjs', '.github/workflows/mobile-web.yml']
   workflow_dispatch:
 permissions:
   contents: write
-  pages: write
-  id-token: write
 concurrency:
   group: mobile-web-publish
   cancel-in-progress: false
@@ -17,13 +15,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Keep optimizer
-        run: cp Tools/optimize_web.py /tmp/optimize_web.py
+        run: |
+          cp Tools/optimize_web.py /tmp/optimize_web.py
+          cp Tools/tests/mobile_web.cjs /tmp/mobile_web.cjs
       - uses: actions/checkout@v4
         with:
           ref: gh-pages
           path: web
       - name: Compress and limit render resolution
-        run: python3 /tmp/optimize_web.py web
+        run: |
+          python3 /tmp/optimize_web.py web
+          node /tmp/mobile_web.cjs web/index.html
       - name: Save published build
         working-directory: web
         run: |
@@ -32,16 +34,3 @@ jobs:
           git add index.html Build/Web.data.gz Build/Web.wasm.gz
           git diff --cached --quiet || git commit -m 'Reduce mobile download and render resolution'
           git push origin gh-pages
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: web
-  deploy:
-    needs: optimize
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
