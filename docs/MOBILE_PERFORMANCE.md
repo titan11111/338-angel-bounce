@@ -13,7 +13,7 @@ Confirmed contributors from shipped files:
 - Desktop DPR is capped at 1.5. Game rules, physics, art, audio and input handling are retained.
 - Tools/optimize_web.py reapplies this patch after a Unity rebuild. It also creates gzip variants and uses native DecompressionStream with original-file fallback, without requiring custom Content-Encoding headers on GitHub Pages.
 - Verified local gzip output: data 27,620,557 bytes; wasm 8,810,180 bytes; combined 36,430,737 bytes, a 46.2% reduction. This is transfer-size reduction, NOT an fps measurement or a reduction of decompressed Unity memory.
-- .github/workflows/mobile-web.yml runs optimization and publishes the resulting gh-pages build on changes to optimizer/workflow. Compression publication is pending until the generated files and changed HTML are read back from gh-pages. Never report a saved workflow as a successful deployment.
+- .github/workflows/mobile-web.yml runs optimization and publishes the resulting gh-pages build on changes to optimizer/workflow. Compressed output and HTML were read back from gh-pages commit ecaf0f8b623fe63a73ffdd83686150384f58ede0. Pages build/deployment run 40692039297 completed successfully. Updated gameplay and public HTTP hash equality remain unverified. The optimizer workflow uses the existing gh-pages branch publication; duplicate Actions deployment jobs were removed after environment rejection.
 
 ## Repeatable verification
 1. After Titan > Build Web, run `python3 Tools/optimize_web.py ../Builds/Web` from Project before publishing.
