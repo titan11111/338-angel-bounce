@@ -1,5 +1,7 @@
 # ANGEL BOUNCE — Day 104
 
+プレイ: https://titan11111.github.io/338-angel-bounce/
+
 Unity Hubの登録先：このProjectフォルダ。Unity 6000.3.26f1。
 Assets/Scenes/Main.unityを開きPlayするとタイトル画面が表示される。
 

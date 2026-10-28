@@ -5,6 +5,7 @@
 /UserSettings/
 .DS_Store
 /Assets/_Recovery/
+/Assets/_Recovery.meta
 *.csproj
 *.sln
 *.user
