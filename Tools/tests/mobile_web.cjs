@@ -11,6 +11,23 @@ const source = html.split('<!-- angel-mobile-performance:start -->')[1].split('<
     const config={};await ctx.window.angelPrepare(config);
     assert.equal(config.devicePixelRatio,expected);
   }
+  const zlib = require('node:zlib');
+  const blobs=[];
+  const ctx={innerWidth:844,innerHeight:390,devicePixelRatio:3,matchMedia:()=>({matches:true}),navigator:{userAgent:'iPhone'},window:{},console,
+    DecompressionStream,Response,Blob,URL:{createObjectURL:blob=>{blobs.push(blob);return 'blob:'+blobs.length;}},
+    fetch:async()=>new Response(zlib.gzipSync(Buffer.from('Unity test bytes')))};
+  vm.runInNewContext(source,ctx);
+  const config={dataUrl:'Build/Web.data',codeUrl:'Build/Web.wasm'};
+  await ctx.window.angelPrepare(config);
+  assert.equal(blobs.length,2);
+  for (const blob of blobs) assert.equal(await blob.text(),'Unity test bytes');
+  assert.equal(blobs[1].type,'application/wasm');
+  ctx.fetch=async()=>{throw new Error('Simulated network failure')};
+  ctx.console={warn:()=>{}};
+  const fallback={dataUrl:'Build/Web.data',codeUrl:'Build/Web.wasm'};
+  await ctx.window.angelPrepare(fallback);
+  assert.equal(fallback.dataUrl,'Build/Web.data');assert.equal(fallback.codeUrl,'Build/Web.wasm');
+  console.log('PASS: gzip streaming decompression, wasm MIME, compressed-download failure fallback');
   // Old browsers keep original URLs; no dependency on DecompressionStream.
   console.log('PASS: inline JS syntax, phone portrait/landscape, tablet cap, desktop cap, legacy decompressor fallback');
 })().catch(e=>{console.error(e);process.exitCode=1});
