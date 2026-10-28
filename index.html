@@ -25,6 +25,16 @@
         <div id="unity-build-title">Angel Bounce</div>
       </div>
     </div>
+    <!-- angel-mobile-performance:start -->
+    <script>
+    const angelMobile = matchMedia('(pointer: coarse)').matches || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const angelDpr = () => Math.min(1, 960 / Math.max(innerWidth, innerHeight));
+    window.angelPrepare = async function(config) {
+      config.devicePixelRatio = angelMobile ? angelDpr() : Math.min(devicePixelRatio, 1.5);
+      config.productVersion = '1.0-mobile-2';
+    };
+    </script>
+    <!-- angel-mobile-performance:end -->
     <script>
       var canvas = document.querySelector("#unity-canvas");
 
@@ -114,10 +124,16 @@
 
       var script = document.createElement("script");
       script.src = loaderUrl;
-      script.onload = () => {
+      script.onload = async () => {
+        await window.angelPrepare(config);
         createUnityInstance(canvas, config, (progress) => {
           document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
               }).then((unityInstance) => {
+                window.angelUnity = unityInstance;
+                if (angelMobile) {
+                  const resize = () => { unityInstance.Module.devicePixelRatio = angelDpr(); };
+                  addEventListener('resize', resize);
+                }
                 document.querySelector("#unity-loading-bar").style.display = "none";
                 document.querySelector("#unity-fullscreen-button").onclick = () => {
                   unityInstance.SetFullscreen(1);
