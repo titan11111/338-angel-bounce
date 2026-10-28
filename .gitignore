@@ -4,6 +4,7 @@
 /obj/
 /UserSettings/
 .DS_Store
+/Assets/_Recovery/
 *.csproj
 *.sln
 *.user
