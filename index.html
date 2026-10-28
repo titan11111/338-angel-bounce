@@ -25,13 +25,35 @@
         <div id="unity-build-title">Angel Bounce</div>
       </div>
     </div>
+    
     <!-- angel-mobile-performance:start -->
     <script>
     const angelMobile = matchMedia('(pointer: coarse)').matches || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    // Cap total render pixels as well as DPR (landscape tablets can be very wide).
     const angelDpr = () => Math.min(1, 960 / Math.max(innerWidth, innerHeight));
     window.angelPrepare = async function(config) {
       config.devicePixelRatio = angelMobile ? angelDpr() : Math.min(devicePixelRatio, 1.5);
       config.productVersion = '1.0-mobile-2';
+      const urls = [];
+      window.angelBlobUrls = urls;
+      if (typeof DecompressionStream === 'undefined') return;
+      await Promise.all(['dataUrl', 'codeUrl'].map(async key => {
+        const original = config[key];
+        try {
+          const response = await fetch(original + '.gz?v=mobile2');
+          if (!response.ok || !response.body) throw new Error('Compressed download unavailable');
+          const stream = response.body.pipeThrough(new DecompressionStream('gzip'));
+          const blob = new Blob([await new Response(stream).arrayBuffer()], {
+            type: key === 'codeUrl' ? 'application/wasm' : 'application/octet-stream'
+          });
+          config[key] = URL.createObjectURL(blob);
+          urls.push(config[key]);
+        } catch (error) {
+          // Original binaries remain available for older browsers or network failures.
+          console.warn('Using original Unity asset:', key, error);
+          config[key] = original;
+        }
+      }));
     };
     </script>
     <!-- angel-mobile-performance:end -->
@@ -134,6 +156,8 @@
                   const resize = () => { unityInstance.Module.devicePixelRatio = angelDpr(); };
                   addEventListener('resize', resize);
                 }
+                (window.angelBlobUrls || []).forEach(url => URL.revokeObjectURL(url));
+                window.angelBlobUrls = [];
                 document.querySelector("#unity-loading-bar").style.display = "none";
                 document.querySelector("#unity-fullscreen-button").onclick = () => {
                   unityInstance.SetFullscreen(1);
